@@ -1,34 +1,29 @@
-(function() {
-  let autoClicking = false;
-  let minDelay = 300;   // ms
-  let maxDelay = 1200;  // ms
+let cps = 5; // Clicks per second
+let clicking = false;
+let clickInterval;
 
-  function randomDelay(min, max) {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-  }
-
-  function simulateClick() {
-    if (!autoClicking) return;
-
-    const evt = new MouseEvent('click', {
+function startClicking() {
+  if (clicking) return;
+  clicking = true;
+  clickInterval = setInterval(() => {
+    let evt = new MouseEvent("click", {
       bubbles: true,
       cancelable: true,
-      view: window
+      view: window,
     });
     document.elementFromPoint(window.innerWidth / 2, window.innerHeight / 2)?.dispatchEvent(evt);
+  }, 1000 / cps);
+  console.log("AutoClicker started at " + cps + " CPS");
+}
 
-    const nextDelay = randomDelay(minDelay, maxDelay);
-    setTimeout(simulateClick, nextDelay);
+function stopClicking() {
+  clearInterval(clickInterval);
+  clicking = false;
+  console.log("AutoClicker stopped");
+}
+
+document.addEventListener("keydown", (e) => {
+  if (e.key.toLowerCase() === "t") {
+    clicking ? stopClicking() : startClicking();
   }
-
-  // Toggle with "T"
-  document.addEventListener('keydown', (e) => {
-    if (e.key.toLowerCase() === 't') {
-      autoClicking = !autoClicking;
-      console.log(`AutoClicker ${autoClicking ? 'started' : 'stopped'}`);
-      if (autoClicking) simulateClick();
-    }
-  });
-
-  console.log('🎯 Smart AutoClicker loaded. Press "T" to toggle.');
-})();
+});
