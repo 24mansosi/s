@@ -1,29 +1,35 @@
-let cps = 5; // Clicks per second
-let clicking = false;
-let clickInterval;
+ModAPI.require("player"); // Require player module
 
-function startClicking() {
-  if (clicking) return;
-  clicking = true;
-  clickInterval = setInterval(() => {
-    let evt = new MouseEvent("click", {
-      bubbles: true,
-      cancelable: true,
-      view: window,
-    });
-    document.elementFromPoint(window.innerWidth / 2, window.innerHeight / 2)?.dispatchEvent(evt);
-  }, 1000 / cps);
-  console.log("AutoClicker started at " + cps + " CPS");
+var AutoClickMod = {
+  active: false,            // Is autoclicker running?
+  nextClickTick: 0,         // Tick count until next click
+  minDelay: 10,             // Min ticks between clicks (10 = ~0.5 sec if 20 TPS)
+  maxDelay: 25,             // Max ticks between clicks
+  toggleKey: "R",           // Key to toggle autoclicker
+};
+
+function randomDelay(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function stopClicking() {
-  clearInterval(clickInterval);
-  clicking = false;
-  console.log("AutoClicker stopped");
-}
+// Toggle autoclicker with key
+ModAPI.addEventListener("keydown", (event) => {
+  if (event.key.toUpperCase() === AutoClickMod.toggleKey) {
+    AutoClickMod.active = !AutoClickMod.active;
+    ModAPI.print("AutoClicker " + (AutoClickMod.active ? "enabled" : "disabled"));
+    AutoClickMod.nextClickTick = 0; // reset delay
+  }
+});
 
-document.addEventListener("keydown", (e) => {
-  if (e.key.toLowerCase() === "t") {
-    clicking ? stopClicking() : startClicking();
+// Update every game tick
+ModAPI.addEventListener("update", () => {
+  if (!AutoClickMod.active) return;
+
+  if (AutoClickMod.nextClickTick <= 0) {
+    // Fire click
+    ModAPI.player.leftClick(); // Simulates attack/click
+    AutoClickMod.nextClickTick = randomDelay(AutoClickMod.minDelay, AutoClickMod.maxDelay);
+  } else {
+    AutoClickMod.nextClickTick--;
   }
 });
